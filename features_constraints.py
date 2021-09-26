@@ -33,6 +33,8 @@ Função horária do MRUV:
 from sklearnex import patch_sklearn
 patch_sklearn()
 
+from sklearn.metrics import accuracy_score
+
 import pandas as pd
 import numpy as np
 import xgboost as xgb
@@ -83,62 +85,45 @@ y_test = y[7500:]
 
 
 #%%
+n_trees = 1000
 
 params0 = {
-  'colsample_bynode': 0.8,
-  # 'learning_rate': 1,
-  'max_depth': 5,
-  'num_parallel_tree': 100,
-  'objective': 'binary:logistic',
-  'subsample': 0.8,
-  # 'tree_method': 'gpu_hist'
+   'colsample_bynode': 0.8,
+   'learning_rate': 1,
+   'max_depth': 5,
+  'num_parallel_tree': n_trees,
+   'objective': 'binary:logistic',
+   'subsample': 0.8,
 }
 
-params1 = {
-  'colsample_bynode': 0.8,
-  # 'learning_rate': 1,
-  'max_depth': 5,
-  'num_parallel_tree': 100,
-  'objective': 'binary:logistic',
-  'subsample': 0.8,
-  # 'tree_method': 'gpu_hist',
-  'interaction_constraints':[list(range(8)), list(range(8,16))]
-}
-
-params2 = {
-  'colsample_bynode': 0.8,
-  # 'learning_rate': 1,
-  'max_depth': 5,
-  'num_parallel_tree': 100,
-  'objective': 'binary:logistic',
-  'subsample': 0.8,
-  # 'tree_method': 'gpu_hist',
-  'interaction_constraints':[[i,i+1] for i in range(0,16,2)]
-}
-
-seed = np.random.randint(1000000)
-
-xgb_0 = xgb.XGBRFClassifier(**params0, random_state=seed).fit(X_train, y_train)
-
-xgb_1 = xgb.XGBRFClassifier(**params1, random_state=seed).fit(X_train, y_train)
-
-xgb_2 = xgb.XGBRFClassifier(**params2, random_state=seed).fit(X_train, y_train)
-
-predict0 = xgb_0.predict(X_test)
-predict1 = xgb_1.predict(X_test)
-predict2 = xgb_2.predict(X_test)
+params1 = params0.copy()
+params1['interaction_constraints']=[list(range(8)), list(range(8,16))]
 
 
-#%%
-from sklearn.metrics import accuracy_score
 
-accuracy0 = accuracy_score(y_test, predict0)
-accuracy1 = accuracy_score(y_test, predict1)
-accuracy2 = accuracy_score(y_test, predict2)
+to_print = []
+for i in range(10):
+    seed = np.random.randint(1000000)
+    
+    xgb_0 = xgb.XGBRFClassifier(**params0, random_state=seed).fit(X_train, y_train)
+    
+    xgb_1 = xgb.XGBRFClassifier(**params1, random_state=seed).fit(X_train, y_train)
+    
+    
+    predict0 = xgb_0.predict(X_test)
+    predict1 = xgb_1.predict(X_test)
+    
 
-print('A acuracia SEM isolamento de variaveis foi de:', accuracy0)
-print('A acuracia COM isolamento de variaveis foi de:', accuracy1)
-print('A acuracia COM isolamento maior  de variaveis foi de:', accuracy2)
+
+    accuracy0 = accuracy_score(y_test, predict0)
+    accuracy1 = accuracy_score(y_test, predict1)
+
+
+    to_print.append('\nA acuracia SEM isolamento de variaveis foi de:' + str(accuracy0))
+    to_print.append('A acuracia COM isolamento de variaveis foi de:'+ str(accuracy1))
+
+for row in to_print:
+    print(row)
 
 #%%
 
